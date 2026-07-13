@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  flask-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:5000" # Exposes the app on port 8080 of your server
+    restart: always
