@@ -1,0 +1,57 @@
+body{
+
+    background:#050505;
+
+    color:#EAEAEA;
+
+    font-family:JetBrains Mono, monospace;
+
+    margin:0;
+
+    padding:40px;
+
+}
+
+#terminal{
+
+    max-width:1200px;
+
+    margin:auto;
+
+}
+
+.green{
+
+    color:#00ff88;
+
+}
+
+.blue{
+
+    color:#4fc3f7;
+
+}
+
+.prompt{
+
+    display:flex;
+
+    gap:8px;
+
+}
+
+input{
+
+    flex:1;
+
+    background:transparent;
+
+    border:none;
+
+    color:white;
+
+    font:inherit;
+
+    outline:none;
+
+}

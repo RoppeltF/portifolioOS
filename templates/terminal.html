@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>PortfolioOS</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div id="terminal">
+
+
+    <div id="output"></div>
+
+
+        <div id="prompt" style="display:none;">
+            <span id="hostname">    
+                <span id="user" class="green">
+                        roberto@portfolioOS
+                    </span>
+
+                    <span class="white">
+                    :
+                    </span>
+
+                    <span id="path" class="blue">
+                    ~
+                    </span>
+
+                    <span id="symbol">
+                    $
+                    </span>
+            </span>
+                <input id="command" autofocus autocomplete="off">
+            
+        </div>
+
+
+</div>
+
+    <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/boot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/terminal-ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
+
+</body>
+
+</html>

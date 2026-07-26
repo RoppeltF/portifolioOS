@@ -1,0 +1,562 @@
+const output = document.getElementById("output");
+const prompt = document.getElementById("prompt");
+const input = document.getElementById("command");
+
+
+let bootFinished = false;
+let skipBoot = false;
+
+
+const MAX_HISTORY = 10;
+
+let commandHistory = [];
+let historyIndex = 0;
+let savedInput = "";
+
+
+
+/*
+    Focus terminal when clicking anywhere
+*/
+document.addEventListener(
+    "click",
+    () => {
+
+        if (bootFinished) {
+            input.focus();
+        }
+
+    }
+);
+
+
+
+/*
+    Skip boot animation
+*/
+document.addEventListener(
+    "keydown",
+    () => {
+
+        if (!bootFinished) {
+
+            skipBoot = true;
+
+        }
+
+    }
+);
+
+
+
+/*
+    Keyboard navigation
+*/
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+
+        if (!bootFinished) {
+            return;
+        }
+
+
+
+        /*
+            Previous command
+        */
+        if (event.key === "ArrowUp") {
+
+
+            event.preventDefault();
+
+
+            if (
+                commandHistory.length === 0
+            ) {
+                return;
+            }
+
+
+
+            if (
+                historyIndex === commandHistory.length
+            ) {
+
+                savedInput = input.value;
+
+            }
+
+
+
+            if (
+                historyIndex > 0
+            ) {
+
+                historyIndex--;
+
+
+                input.value =
+                    commandHistory[
+                        historyIndex
+                    ];
+
+            }
+
+
+        }
+
+
+
+        /*
+            Next command
+        */
+        if (event.key === "ArrowDown") {
+
+
+            event.preventDefault();
+
+
+
+            if (
+                commandHistory.length === 0
+            ) {
+                return;
+            }
+
+
+
+            if (
+                historyIndex <
+                commandHistory.length - 1
+            ) {
+
+
+                historyIndex++;
+
+
+                input.value =
+                    commandHistory[
+                        historyIndex
+                    ];
+
+
+            }
+            else {
+
+
+                historyIndex =
+                    commandHistory.length;
+
+
+                input.value =
+                    savedInput;
+
+
+            }
+
+        }
+
+
+
+        /*
+            Ctrl + L
+            Clear terminal
+        */
+        if (
+            event.ctrlKey &&
+            event.key.toLowerCase() === "l"
+        ) {
+
+            event.preventDefault();
+
+            output.innerHTML = "";
+
+        }
+
+
+
+        /*
+            Ctrl + C
+        */
+        if (
+            event.ctrlKey &&
+            event.key.toLowerCase() === "c"
+        ) {
+
+
+            event.preventDefault();
+
+
+            input.value = "";
+
+
+            addLine("^C");
+
+
+        }
+
+
+    }
+);
+
+
+
+/*
+    Reset history position when typing
+*/
+input.addEventListener(
+    "input",
+    () => {
+
+        historyIndex =
+            commandHistory.length;
+
+    }
+);
+
+
+
+/*
+    Add normal output line
+*/
+function addLine(text){
+
+
+    const line =
+        document.createElement(
+            "div"
+        );
+
+
+    line.className = "line";
+
+
+    line.textContent = text;
+
+
+    output.appendChild(line);
+
+
+}
+
+
+
+/*
+    Typewriter effect
+*/
+async function typeLine(text){
+
+
+    const line =
+        document.createElement(
+            "div"
+        );
+
+
+    line.className = "line";
+
+
+    output.appendChild(line);
+
+
+
+    for (
+        const char of text
+    ){
+
+
+        if(skipBoot){
+
+            line.textContent =
+                text;
+
+            break;
+
+        }
+
+
+        line.textContent += char;
+
+
+        await new Promise(
+            resolve =>
+            setTimeout(
+                resolve,
+                25
+            )
+        );
+
+    }
+
+
+}
+
+
+
+/*
+    Execute command
+*/
+async function executeCommand(command){
+
+
+    command =
+        command.trim();
+
+
+
+    if(command === ""){
+
+        return;
+
+    }
+
+
+
+    /*
+        Save history
+    */
+    if(
+        commandHistory[
+            commandHistory.length - 1
+        ] !== command
+    ){
+
+        commandHistory.push(command);
+
+    }
+
+
+
+    if(
+        commandHistory.length >
+        MAX_HISTORY
+    ){
+
+        commandHistory.shift();
+
+    }
+
+
+    historyIndex =
+        commandHistory.length;
+
+
+    savedInput = "";
+
+
+
+    /*
+        Display command
+    */
+    const commandLine =
+        document.createElement(
+            "div"
+        );
+
+
+    commandLine.innerHTML = `
+
+        <span class="green">
+            roberto@portfolio
+        </span>
+
+        :
+
+        <span class="blue">
+            ~
+        </span>
+
+        $
+
+        ${command}
+
+    `;
+
+
+    output.appendChild(
+        commandLine
+    );
+
+
+
+    /*
+        Send to Flask
+    */
+    const response =
+        await fetch(
+            "/api/command",
+            {
+
+                method:"POST",
+
+                headers:{
+
+                    "Content-Type":
+                    "application/json"
+
+                },
+
+                body:
+                JSON.stringify(
+                    {
+                        command: command
+                    }
+                )
+
+            }
+        );
+
+
+
+    const data =
+        await response.json();
+
+
+
+    for(
+        const line of data.output
+    ){
+
+
+        /*
+            Backend clear command
+        */
+        if(
+            line === "__CLEAR__"
+        ){
+
+            output.innerHTML = "";
+
+            continue;
+
+        }
+
+
+
+        await typeLine(
+            line
+        );
+
+
+    }
+
+
+
+    window.scrollTo(
+        0,
+        document.body.scrollHeight
+    );
+
+
+}
+
+
+
+/*
+    Enter command
+*/
+input.addEventListener(
+    "keydown",
+    async(event)=>{
+
+
+        if(
+            event.key === "Enter"
+        ){
+
+
+            const command =
+                input.value;
+
+
+
+            input.value = "";
+
+
+
+            await executeCommand(
+                command
+            );
+
+
+        }
+
+
+    }
+);
+
+
+
+/*
+    Boot sequence
+*/
+async function boot(){
+
+
+    const response =
+        await fetch(
+            "/api/boot"
+        );
+
+
+    const sequence =
+        await response.json();
+
+
+
+    for(
+        const item of sequence
+    ){
+
+
+        if(skipBoot){
+
+            break;
+
+        }
+
+
+
+        await typeLine(
+            item.text
+        );
+
+
+
+        if(!skipBoot){
+
+            await new Promise(
+                resolve =>
+                setTimeout(
+                    resolve,
+                    item.delay * 1000
+                )
+            );
+
+        }
+
+
+    }
+
+
+
+    /*
+        Show terminal
+    */
+    prompt.style.display =
+        "flex";
+
+
+    bootFinished = true;
+
+
+    input.focus();
+
+
+}
+
+
+
+boot();
